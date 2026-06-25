@@ -12,6 +12,7 @@ interface PlaceCardsBlockProps {
   places: NearbyPlace[];
   inlinePlaces?: NearbyPlace[];
   onAction?: (action: DynamicRendererAction) => void;
+  disabled?: boolean;
 }
 
 function placeField(place: NearbyPlace, field: string): string | null {
@@ -46,20 +47,23 @@ function PlaceCardItem({
   place,
   showFields,
   onAction,
+  disabled,
 }: {
   place: NearbyPlace;
   showFields: string[];
   onAction?: (action: DynamicRendererAction) => void;
+  disabled?: boolean;
 }) {
   return (
     <button
+      disabled={disabled}
       onClick={() =>
         onAction?.({
           type: "show_directions",
           payload: { place },
         })
       }
-      className="min-w-[180px] sm:min-w-[220px] rounded-xl border border-border p-3.5 shrink-0 hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer text-left flex flex-col gap-2"
+      className="min-w-[180px] sm:min-w-[220px] rounded-xl border border-border p-3.5 shrink-0 hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer text-left flex flex-col gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <p className="font-semibold text-sm break-words leading-snug">
         {place.name}
@@ -114,6 +118,7 @@ export function PlaceCardsBlock({
   places,
   inlinePlaces,
   onAction,
+  disabled,
 }: PlaceCardsBlockProps) {
   const matched = inlinePlaces?.length
     ? inlinePlaces
@@ -136,6 +141,7 @@ export function PlaceCardsBlock({
             place={place}
             showFields={show}
             onAction={onAction}
+            disabled={disabled}
           />
         ))}
       </div>
@@ -151,6 +157,7 @@ export function PlaceCardsBlock({
             place={place}
             showFields={show}
             onAction={onAction}
+            disabled={disabled}
           />
         ))}
       </div>
@@ -163,13 +170,14 @@ export function PlaceCardsBlock({
         {matched.map((place) => (
           <button
             key={place.place_id}
+            disabled={disabled}
             onClick={() =>
               onAction?.({
                 type: "show_directions",
                 payload: { place },
               })
             }
-            className="w-full flex items-center justify-between rounded-lg border border-border p-3 hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer text-left"
+            className="w-full flex items-center justify-between rounded-lg border border-border p-3 hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer text-left disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div className="min-w-0 flex-1">
               <p className="font-medium text-sm break-words">{place.name}</p>

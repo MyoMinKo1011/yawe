@@ -11,6 +11,7 @@ interface ChatMessageProps {
   displayName?: string | null;
   avatarUrl?: string | null;
   onAction?: (action: DynamicRendererAction) => void;
+  disabled?: boolean;
 }
 
 function tryParseJsonContent(content: string): {
@@ -82,7 +83,7 @@ function extractComponents(msg: ChatMessageType): {
   };
 }
 
-export function ChatMessage({ message, displayName, avatarUrl, onAction }: ChatMessageProps) {
+export function ChatMessage({ message, displayName, avatarUrl, onAction, disabled }: ChatMessageProps) {
   const isUser = message.role === "user";
   const { components, places } = isUser
     ? { components: [], places: [] }
@@ -111,7 +112,7 @@ export function ChatMessage({ message, displayName, avatarUrl, onAction }: ChatM
           </div>
         ) : (
           <div className="min-w-0 max-w-full">
-            <DynamicRenderer components={components as never} places={places as never} onAction={onAction} />
+            <DynamicRenderer components={components as never} places={places as never} onAction={onAction} disabled={disabled} />
           </div>
         )}
       </div>

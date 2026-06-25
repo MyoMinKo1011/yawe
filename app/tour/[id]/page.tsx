@@ -7,13 +7,14 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { placeTypeLabel } from "@/lib/utils";
-import { MapPin, Clock } from "lucide-react";
+import { MapPin, Clock, AlertTriangle } from "lucide-react";
 
 export default function TourDetailPage() {
   const params = useParams();
   const id = typeof params.id === "string" ? params.id : (params.id?.[0] ?? "");
   const [tour, setTour] = useState<Tour | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadTour() {
@@ -22,9 +23,13 @@ export default function TourDetailPage() {
         if (res.ok) {
           const data = await res.json();
           setTour(data.tour);
+        } else if (res.status === 404) {
+          setError("ခရီးစဉ် မတွေ့ပါ");
+        } else {
+          setError("ခရီးစဉ် ဖော်ပြ၍မရပါ။");
         }
       } catch {
-        // not found
+        setError("ဆာဗာနှင့် ချိတ်ဆက်၍မရပါ။");
       } finally {
         setLoading(false);
       }
@@ -47,7 +52,14 @@ export default function TourDetailPage() {
   if (!tour) {
     return (
       <div className="flex-1 max-w-3xl mx-auto w-full px-4 py-6 text-center">
-        <p className="text-muted-foreground">ခရီးစဉ် မတွေ့ပါ</p>
+        {error ? (
+          <div className="flex flex-col items-center gap-3">
+            <AlertTriangle size={32} className="text-amber-500" />
+            <p className="text-muted-foreground">{error}</p>
+          </div>
+        ) : (
+          <p className="text-muted-foreground">ခရီးစဉ် မတွေ့ပါ</p>
+        )}
       </div>
     );
   }

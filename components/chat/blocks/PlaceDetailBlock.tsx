@@ -18,9 +18,10 @@ import type { DynamicRendererAction } from "@/components/chat/DynamicRenderer";
 interface PlaceDetailBlockProps {
   place: NearbyPlace;
   onAction?: (action: DynamicRendererAction) => void;
+  disabled?: boolean;
 }
 
-export function PlaceDetailBlock({ place, onAction }: PlaceDetailBlockProps) {
+export function PlaceDetailBlock({ place, onAction, disabled }: PlaceDetailBlockProps) {
   if (!place) {
     return (
       <p className="text-sm text-muted-foreground">နေရာ အချက်အလက် မရရှိပါ</p>
@@ -137,6 +138,7 @@ export function PlaceDetailBlock({ place, onAction }: PlaceDetailBlockProps) {
         <div className="flex flex-wrap gap-2 pt-1">
           <Button
             size="sm"
+            disabled={disabled}
             onClick={() =>
               onAction?.({
                 type: "show_directions",
@@ -150,6 +152,7 @@ export function PlaceDetailBlock({ place, onAction }: PlaceDetailBlockProps) {
           <Button
             size="sm"
             variant="outline"
+            disabled={disabled}
             onClick={() =>
               onAction?.({
                 type: "save_place",
@@ -157,7 +160,7 @@ export function PlaceDetailBlock({ place, onAction }: PlaceDetailBlockProps) {
               })
             }
           >
-            သိမ်းရန်
+            {disabled ? "သိမ်းဆည်းနေသည်..." : "သိမ်းရန်"}
           </Button>
         </div>
       </div>

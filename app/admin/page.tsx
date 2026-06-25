@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Store, Layers } from "lucide-react";
+import { Store, Layers, AlertTriangle } from "lucide-react";
 
 interface Place {
   id: string;
@@ -49,17 +49,25 @@ type SliceData = { category: string; label: string; count: number; color: string
 export default function AdminDashboardPage() {
   const [places, setPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
     function fetchStats() {
       fetch("/api/admin/places?limit=500", { cache: "no-store" })
-        .then((r) => r.json())
+        .then((r) => {
+          if (!r.ok) throw new Error("Failed");
+          return r.json();
+        })
         .then((data) => {
           setPlaces(data.places ?? []);
+          setError(null);
           setLoading(false);
         })
-        .catch(() => setLoading(false));
+        .catch(() => {
+          setError("စာရင်းဇယား ဖော်ပြ၍မရပါ။");
+          setLoading(false);
+        });
     }
     fetchStats();
     function onFocus() { fetchStats(); }
@@ -94,6 +102,11 @@ export default function AdminDashboardPage() {
           {Array.from({ length: 2 }).map((_, i) => (
             <Skeleton key={i} className="h-24 rounded-xl" />
           ))}
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center gap-3 py-8 text-center">
+          <AlertTriangle size={32} className="text-amber-500" />
+          <p className="text-muted-foreground">{error}</p>
         </div>
       ) : (
         <>

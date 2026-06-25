@@ -38,6 +38,7 @@ interface DynamicRendererProps {
   components: UIComponent[];
   places: NearbyPlace[];
   onAction?: (action: DynamicRendererAction) => void;
+  disabled?: boolean;
 }
 
 function p(comp: UIComponent, key: string) {
@@ -74,6 +75,7 @@ export function DynamicRenderer({
   components,
   places,
   onAction,
+  disabled,
 }: DynamicRendererProps) {
   if (!components.length) {
     return (
@@ -142,6 +144,7 @@ export function DynamicRenderer({
                   places={places}
                   inlinePlaces={resolvedPlaces}
                   onAction={onAction}
+                  disabled={disabled}
                 />
               </div>
             );
@@ -168,6 +171,7 @@ export function DynamicRenderer({
                 key={componentKey}
                 place={place}
                 onAction={onAction}
+                disabled={disabled}
               />
             );
           }

@@ -7,28 +7,34 @@ import { createClient } from "@/lib/supabase/client";
 export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const sessionCreated = useRef(false);
 
   const startNewSession = useCallback(async () => {
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
 
-    const { data } = await supabase
-      .from("chat_sessions")
-      .insert({
-        user_id: user.id,
-        title: "New conversation",
-      })
-      .select()
-      .single();
+      const { data } = await supabase
+        .from("chat_sessions")
+        .insert({
+          user_id: user.id,
+          title: "New conversation",
+        })
+        .select()
+        .single();
 
-    if (data) {
-      setSessionId(data.id);
-      setMessages([]);
+      if (data) {
+        setSessionId(data.id);
+        setMessages([]);
+        setError(null);
+      }
+    } catch {
+      setError("စကားပြောခန်း စတင်၍မရပါ။");
     }
   }, []);
 
@@ -93,7 +99,9 @@ export function useChat() {
         };
 
         setMessages((prev) => [...prev, assistantMsg]);
-      } catch {
+      } catch (err) {
+        const reason = err instanceof Error ? err.message : "တစ်ခုခုမှားယွင်းသွားပါသည်။";
+        setError(reason);
         const errorMsg: ChatMessage = {
           id: crypto.randomUUID(),
           session_id: sessionId,
@@ -115,6 +123,7 @@ export function useChat() {
   return {
     messages,
     loading,
+    error,
     sessionId,
     sendMessage,
     startNewSession,

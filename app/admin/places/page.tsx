@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { placeTypeLabel } from "@/lib/utils";
 import { PLACE_CATEGORIES } from "@/lib/types";
-import { Plus, Search, Pencil, Trash2, Star, MapPin } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Star, MapPin, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 
 interface Place {
   id: string;
@@ -24,11 +25,13 @@ export default function AdminPlacesPage() {
   const router = useRouter();
   const [places, setPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
 
   const fetchPlaces = useCallback(async () => {
     setLoading(true);
+    setError(null);
     const params = new URLSearchParams();
     if (categoryFilter) params.set("category", categoryFilter);
     if (search) params.set("q", search);
@@ -39,8 +42,12 @@ export default function AdminPlacesPage() {
       if (res.ok) {
         const data = await res.json();
         setPlaces(data.places);
+      } else {
+        setError("နေရာများ ဖော်ပြ၍မရပါ။");
       }
-    } catch {}
+    } catch {
+      setError("ဆာဗာနှင့် ချိတ်ဆက်၍မရပါ။");
+    }
     setLoading(false);
   }, [categoryFilter, search]);
 
@@ -50,10 +57,17 @@ export default function AdminPlacesPage() {
 
   async function handleDelete(id: string, name: string) {
     if (!confirm(`Delete "${name}"?`)) return;
-    const res = await fetch(`/api/admin/places/${id}`, { method: "DELETE", cache: "no-store" });
-    if (res.ok) {
-      fetchPlaces();
-      router.refresh();
+    try {
+      const res = await fetch(`/api/admin/places/${id}`, { method: "DELETE", cache: "no-store" });
+      if (res.ok) {
+        toast.success(`"${name}" ဖျက်လိုက်ပါပြီ`);
+        fetchPlaces();
+        router.refresh();
+      } else {
+        toast.error(`"${name}" ဖျက်၍မရပါ။`);
+      }
+    } catch {
+      toast.error("ဆာဗာနှင့် ချိတ်ဆက်၍မရပါ။");
     }
   }
 
@@ -116,6 +130,12 @@ export default function AdminPlacesPage() {
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-12 w-full rounded-lg" />
           ))}
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center gap-3 py-12 text-center">
+          <AlertTriangle size={32} className="text-amber-500" />
+          <p className="text-muted-foreground">{error}</p>
+          <Button variant="outline" size="sm" onClick={() => fetchPlaces()}>ထပ်ကြိုးစား</Button>
         </div>
       ) : (
         <div className="rounded-xl border border-border overflow-hidden">

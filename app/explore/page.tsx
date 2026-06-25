@@ -317,9 +317,11 @@ export default function ExplorePage() {
   const mapRef = useRef<MapRef>(null);
   const [places, setPlaces] = useState<NearbyPlace[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedPlace, setSelectedPlace] = useState<NearbyPlace | null>(null);
   const [routeData, setRouteData] = useState<RouteData | null>(null);
   const [showDirections, setShowDirections] = useState(false);
+  const [routeLoading, setRouteLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategories, setActiveCategories] = useState<Set<string>>(
     new Set(),
@@ -333,6 +335,7 @@ export default function ExplorePage() {
 
   const fetchPlaces = useCallback(async (lat: number, lng: number) => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/recommend", {
         method: "POST",
@@ -343,7 +346,8 @@ export default function ExplorePage() {
       const data = await res.json();
       setPlaces(data.places ?? []);
     } catch {
-      // silently fail
+      setPlaces([]);
+      setError("နေရာများ ရှာဖွေ၍မရပါ။");
     } finally {
       setLoading(false);
     }
@@ -404,13 +408,16 @@ export default function ExplorePage() {
     async (place: NearbyPlace) => {
       setSelectedPlace(place);
       setShowDirections(false);
+      setRouteData(null);
       mapRef.current?.flyTo({
         center: [place.lng, place.lat],
         zoom: 15,
         duration: 700,
       });
 
+      setRouteLoading(true);
       const route = await fetchRoute(effectiveLocation, place);
+      setRouteLoading(false);
       if (route) {
         setRouteData(route);
         const bounds = new LngLatBounds();
@@ -579,6 +586,16 @@ export default function ExplorePage() {
                 အားလုံးရှင်းရန်
               </button>
             )}
+          </div>
+        )}
+
+        {/* Error indicator */}
+        {error && !loading && (
+          <div className="flex justify-center mt-2">
+            <div className="bg-red-50 border border-red-200 rounded-full px-3 py-1.5 text-xs shadow-md text-red-700 flex items-center gap-1.5">
+              <AlertTriangle size={12} />
+              <span>{error}</span>
+            </div>
           </div>
         )}
 
@@ -756,6 +773,12 @@ export default function ExplorePage() {
                     ) : null}
                   </div>
                 </div>
+
+                {routeLoading && (
+                  <div className="mx-3 mb-2 p-2 bg-blue-50 rounded-lg border border-blue-100">
+                    <p className="text-xs text-blue-600 animate-pulse">လမ်းကြောင်းရှာဖွေနေသည်...</p>
+                  </div>
+                )}
 
                 {routeData && (
                   <div className="mx-3 mb-2 p-2 bg-blue-50 rounded-lg border border-blue-100">

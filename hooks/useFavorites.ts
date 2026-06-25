@@ -3,30 +3,42 @@
 import { useState, useCallback, useEffect } from "react";
 import type { Favorite } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
-import type { PlaceCategory } from "@/lib/types";
 
 export function useFavorites() {
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const fetchFavorites = useCallback(async () => {
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setFavorites([]);
+        setLoading(false);
+        return;
+      }
+
+      const { data, error: fetchErr } = await supabase
+        .from("favorites")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (fetchErr) {
+        setError("သိမ်းထားသောနေရာများ ဖော်ပြ၍မရပါ။");
+      } else {
+        setError(null);
+        setFavorites((data as Favorite[]) ?? []);
+      }
+    } catch {
+      setError("သိမ်းထားသောနေရာများ ဖော်ပြ၍မရပါ။");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const { data } = await supabase
-      .from("favorites")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-
-    setFavorites((data as Favorite[]) ?? []);
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -34,34 +46,61 @@ export function useFavorites() {
   }, [fetchFavorites]);
 
   const addFavorite = useCallback(
-    async (placeId: string) => {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
+    async (placeId: string, placeName?: string) => {
+      setActionLoading(true);
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          setError("အကောင့်ဝင်ရန် လိုအပ်ပါသည်။");
+          return;
+        }
 
-      const { error } = await supabase.from("favorites").insert({
-        user_id: user.id,
-        place_id: placeId,
-      });
+        const { error: insertErr } = await supabase.from("favorites").insert({
+          user_id: user.id,
+          place_id: placeId,
+        });
 
-      if (!error) {
-        fetchFavorites();
+        if (insertErr) {
+          setError("နေရာ သိမ်းဆည်း၍မရပါ။");
+        } else {
+          setError(null);
+          setFavorites((prev) => {
+            if (prev.some((f) => f.place_id === placeId)) return prev;
+            return prev;
+          });
+          fetchFavorites();
+        }
+      } catch {
+        setError("နေရာ သိမ်းဆည်း၍မရပါ။");
+      } finally {
+        setActionLoading(false);
       }
     },
     [fetchFavorites]
   );
 
   const removeFavorite = useCallback(async (favoriteId: string) => {
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("favorites")
-      .delete()
-      .eq("id", favoriteId);
+    setActionLoading(true);
+    try {
+      const supabase = createClient();
+      const { error: removeErr } = await supabase
+        .from("favorites")
+        .delete()
+        .eq("id", favoriteId);
 
-    if (!error) {
-      setFavorites((prev) => prev.filter((f) => f.id !== favoriteId));
+      if (removeErr) {
+        setError("နေရာ ဖယ်ရှား၍မရပါ။");
+      } else {
+        setError(null);
+        setFavorites((prev) => prev.filter((f) => f.id !== favoriteId));
+      }
+    } catch {
+      setError("နေရာ ဖယ်ရှား၍မရပါ။");
+    } finally {
+      setActionLoading(false);
     }
   }, []);
 
@@ -75,6 +114,8 @@ export function useFavorites() {
   return {
     favorites,
     loading,
+    error,
+    actionLoading,
     addFavorite,
     removeFavorite,
     isFavorite,

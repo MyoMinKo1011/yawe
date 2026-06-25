@@ -22,6 +22,7 @@ export function ChatView() {
     place: NearbyPlace;
     origin: GeoPosition;
   } | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     getLocation();
@@ -66,7 +67,9 @@ export function ChatView() {
 
           if (allToSave.length === 0) return;
 
+          setSaving(true);
           let saved = 0;
+          let failed = 0;
           for (const place of allToSave) {
             try {
               const res = await fetch("/api/favorites", {
@@ -88,11 +91,17 @@ export function ChatView() {
                 }),
               });
               if (res.ok) saved++;
+              else failed++;
             } catch {
-              // skip failures
+              failed++;
             }
           }
-          toast.success(`${saved} နေရာ သိမ်းဆည်းလိုက်ပါပြီ`);
+          setSaving(false);
+          if (failed > 0) {
+            toast.error(`${saved} နေရာ သိမ်းဆည်းပြီး · ${failed} နေရာ မအောင်မြင်ပါ`);
+          } else {
+            toast.success(`${saved} နေရာ သိမ်းဆည်းလိုက်ပါပြီ`);
+          }
           break;
         }
         default:
@@ -154,7 +163,7 @@ export function ChatView() {
       ) : (
         <div className="flex-1 overflow-y-auto py-4 space-y-4 scrollbar-none min-w-0">
           {messages.map((msg) => (
-            <ChatMessage key={msg.id} message={msg} displayName={displayName} avatarUrl={avatarUrl} onAction={handleAction} />
+            <ChatMessage key={msg.id} message={msg} displayName={displayName} avatarUrl={avatarUrl} onAction={handleAction} disabled={saving} />
           ))}
           {loading && (
             <div className="flex items-start gap-3">
