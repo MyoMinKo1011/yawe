@@ -1,0 +1,12 @@
+CREATE INDEX IF NOT EXISTS idx_places_price_range ON places ((data->>'price_range'));
+CREATE INDEX IF NOT EXISTS idx_places_cuisine_type ON places ((data->>'cuisine_type'));
+CREATE INDEX IF NOT EXISTS idx_places_star_rating ON places ((data->>'star_rating'));
+CREATE INDEX IF NOT EXISTS idx_places_sub_category ON places ((data->>'sub_category'));
+CREATE INDEX IF NOT EXISTS idx_places_market_type ON places ((data->>'market_type'));
+CREATE INDEX IF NOT EXISTS idx_places_transport_type ON places ((data->>'transport_type'));
+CREATE INDEX IF NOT EXISTS idx_places_hospital_type ON places ((data->>'hospital_type'));
+CREATE INDEX IF NOT EXISTS idx_places_institution_type ON places ((data->>'institution_type'));
+CREATE INDEX IF NOT EXISTS idx_places_salon_type ON places ((data->>'salon_type'));
+CREATE INDEX IF NOT EXISTS idx_places_category ON places (category);
+CREATE INDEX IF NOT EXISTS idx_places_location ON places (lat, lng);
+CREATE INDEX IF NOT EXISTS idx_places_gin_data ON places USING gin (data jsonb_path_ops);
