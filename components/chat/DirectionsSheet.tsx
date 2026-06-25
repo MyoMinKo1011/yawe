@@ -462,23 +462,6 @@ export function DirectionsPopup({
           </div>
         )}
 
-        {/* ---- Footer ---- */}
-        {routeData && !navMode && (
-          <div className="px-3 sm:px-4 py-3 border-t border-border mt-auto">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={() => {
-                const url = `https://www.google.com/maps/dir/${origin.lat},${origin.lng}/${destination.lat},${destination.lng}`;
-                window.open(url, "_blank");
-              }}
-            >
-              <Navigation size={14} className="mr-1.5" />
-              Google Maps တွင် ဖွင့်ရန်
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   );
